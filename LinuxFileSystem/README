@@ -1,0 +1,187 @@
+
+Micut Andrei-Ion-Grupa 311CB
+
+Structuri de Date - Tema 3
+
+1. Scopul temei
+
+    Scopul temei este acela de a implementa un manager de sistem de fisiere ce
+utilieaza o trie pentru stocarea directoarelor si fisierelor. Interactiunea cu
+acesta se face prin comenzi asemanatoare celor din terminalul Linux.
+
+2. Implementare
+
+	Implementarea este impartita in doua parti principale: structura de date de
+tip trie si main-ul (unde sunt implementate si comenzile).
+a) Trie este implementata in felul urmator: fiecare nod din trie retine un
+vector de pointeri catre fii. In acest fel accesul la fii este indexat (si,
+deci, mai rapid decat daca am folosi o lista), iar problema cu memoria nu apare
+(fiecare fiu este alocat doar atunci cand este nevoie de el). Implementarea
+functiilor pe trie este facuta destul de clasic (folosind recursivitate acolo
+unde este posibil).
+b) Main-ul contine urmatoarele functii:
+	do_cd - Cauta directorul precizat in trie (relativ la pozitia data ca
+parametru)
+	do_ls - Listeaza toate directoarele si fisierele de la path-ul dat ca
+parametru
+	go_to_last_directory - Cauta ultimul director din path-ul precizat si
+returneaza prin efect lateral si fisierul de la path-ul respectiv.
+	Celelalte functii au comportamentul asteptat.
+
+3. Implementare detaliata
+
+	Am debuat crearea temei prin fisierul filemgr.h. Mai intai am definit 
+MAX_PATH_LENGTH caruia i-am atribuit valoare 4096, lungimea maxima a caii, apoi
+NO_CHARACTERS caruia i-am atribuit numarul 128, numarul de caractere din tabela
+ASCII. Am continuat sa-mi declar structura, iar, mai apoi, mi-am declarat header-ul
+si functiile ce ma vor ajuta la realizarea temei.
+
+	In fisierul filemgr.c am creat functiile declarate in filemgr.h. 
+
+	Functia make_trie_cell ma va ajuta sa aloc memorie pentru un nou arbore si
+sa-l initializez. Mai intai aloc spatiu pentru arbore, apoi verific succesul
+alocarii, iar daca a reusit alocarea, adaug toate caracterele in arbore si returnez
+arborele.
+
+	Functia erase_trie_cell va sterge intregul arbore si toti fii acestuia.
+Mai intai sterg fii radacinei, iar apoi radacina.
+
+	Functia trie_cell_print imi va afisa calea reprezentata de arbore, insa 
+mai intai verific daca arborele este vid.
+
+	Functia trie_cell_go_back ma ajuta sa ma duc cat mai in spate pana intalnesc
+caracterul dat ca parametru.
+
+	Functia trie_cell_go_forward ma ajuta sa merg inainte pe calea data ca
+parametru. Verific daca am doar radacina in acea cale si o returnez, iar daca nu 
+am cale, atunci returnez valoarea NULL. ALtfel continui sa merg pe cale.
+
+	Functia trie_cell_get_root va merge in ierarhia arborelui pana cand va gasi
+radacina si o va returna. Mai intai verific daca am un arbore vid, iar apoi avansez 
+in arbore. Daca am ajuns la radacina o returnez.
+
+	Functia trie_cell_insert imi va insera un nou cuvant in arbore. Introduc 
+cuvantul pana ajung '\0'(sfarsit). Daca fii radacinei sunt nuli, atunci voi insera 
+fiecare cuvant in arbore.Verific daca s-a reusit inserarea, iar daca nu s-a reusit 
+intorc NULL. Apoi atasez fii nou ocupati la radacina si intorc tot arborele.
+
+	Functia trie_cell_recursive_list imi va afisa toate fisierele si directoarele 
+ce sunt descendente lui p_cell. Voi afisa directorul pe care il retin intr-un buffer 
+doar daca are dimensiunea mai mare ca 0 si se termina cu '/'. Apoi afisez fisierul. 
+Continui functia prin traversarea fiilor arborelui.
+
+	Functia trie_cell_is_empty va verifica daca o functie este goala si va intoarce 
+1, in caz afirmativ, 0, in caz contrar.
+
+	In fisierul main.c am mai adaugat functiile do_cd, do_ls si go_to_last_directory.
+Mi-am definit INPUT_LINE_SIZE careia i-am atribuit valoarea 4096, reprezentand dimensiunea 
+dimensiunea introdusa pe linie.
+
+	Functia do_cd ma va ajuta sa ma mut pe un alt director, pe un alt fiu din arbore,
+mai exact, pe directorul curent dat ca parametru. Verific daca avem cale absoluta, vom 
+apela functia trie_cell_get_root ce va merge in ierarhia arborelui pana cand va gasi 
+radacina, iar valoarea returnata va gi stocata in p_cell. Avansez in ierarhie, director 
+cu director. In variabila token fac delimitarea caii dupa '/', iar daca calea nu este vida, 
+atunci ma voi duce in primul caz si ma voi muta pe muta pe parintele curent al fiului daca 
+este folosit argumentul ".." asupra functiei cd. Daca este folosit argumentul ".", ma refer
+la directorul curent si raman pe loc. Daca nu ne aflam in niciuna dintre aceste situatii, 
+iar aplicatia va primi doar comanda "cd" ma voi muta in radacina. Apelez functia trie_cell_go_forward 
+ce ma ajuta sa merg inainte pe calea data ca parametru, iar daca ajung la radacina, 
+variabila p_cell va lua valoarea radacinii, altfel NULL. Altfel, p_cell ia valoarea fiilor. 
+La sfarsit returnez p_cell.
+
+	Functia do_ls imi va lista toate fisierele si directoarele ce se afla in directorul curent.
+
+	Functia go_to_last_directory cauta ultimul director din path-ul precizat si returneaza 
+prin efect lateral si fisierul de la path-ul respectiv. In variabila p_cell voi avea stocata
+radacina. Numar numarul de slash-uri. Daca nu ma gasesc in directorul corect, atunci ma voi muta, 
+fiind ajutat de functia do_cd. Daca am cale absoluta, afisez ca si eroare '/'. Daca calea nu a fost 
+gasita, afisez mesajul de eroare: "Numele caii: No such file or directory", apoi intoarce NULL. 
+Daca in locul unui unui director se da calea unui fisier, afisez mesajul de eroare: "Numele caii: 
+Not a directory", apoi intoarce NULL. Daca ajung la sfarsit, ma voi duce pe ultimul director.
+
+	Functia do_mkdir ma va ajuta sa creez un nou director, iar numele variabilelor nu va fi 
+schimbat. Verific daca directorul sau fisierul deja exista, iar daca exista, afisez mesajul de eroare: 
+"Nume director: already exists". Aloc memorie pentru un nou arbore, iar daca nu reusesc, ies din functie.
+
+	Functia do_touch imi va crea un fisier, iar argumentul numelui nu va fi modificat. Ma mut 
+in ultimul director, iar daca acesta este nul, ies. Verific daca directorul sau fisierul exista deja 
+si afisez mesajul de eroare: "Nume fisier: already exists". Apoi inserez noua celula.
+
+	Functia do_rmdir imi va sterge directorul dat ca parametru. Ma voi muta pe ultimul director 
+si verific daca este vid. Verific daca m-am putut muta pe directorul p_cell, care are calea p. Daca 
+nu am reusit voi afisa mesajul de eroare: "Nume director: No such file or directory". Daca in loc
+de un dirctor, avem o cale, atunci afisez mesajul de eroare: "Nume director: Not a directory". 
+Verific daca o celula este goala si o sterg, atat pe ea, cat si fii acesteia. In cazul in care 
+directorul pe care vrem sa-l stergem nu este gol, atunci afisez mesajul de eroare:"Nume 
+director: Directory not empty".
+
+	Functia do_rm imi va sterge recursiv fisierele si directoarele. Cu ajutorul variabilei 
+p_cell ma voi muta pe ultimul director si verific daca este vid. Verific daca ma pot muta pe 
+directorul respectiv. Daca directorul este vid, atunci afisez mesajul de eroare: "Nume fisier: 
+No such file or directory". Daca calea exista, atunci realizez stergerea propriu-zisa. Daca 
+calea nu exista, atunci afisez mesajul de eroare: "NUme fisier: No such file or directory".
+
+	In functia main, am realizat unirea tuturor functiilor pentru a ma ajuta la realizarea 
+temei. Verific daca am mai mult de o linie sau niciuna si returnez -1. Apoi iar fiecare linie 
+in parte. Verific daca comanda introdusa este "pwd", iar apoi verific daca comanda este apelata 
+cu prea multe argumente, iar daca este asa, atunci voi afisa, eroare: "pwd: too many arguments".
+Daca nu ma aflu in radacina, atunci afisez calea la care ma aflu, altfel calea radacinii. Apoi 
+verific daca comanda introdusa este "ls". Verific daca am argumente. Verific daca argumentul introdus
+este "-F" si atunci o sa avem o afisare speciala, deoarece vom avea la finalul directoarelor 
+'/' sau '*', wildcard-uri. Verific daca comanda "ls" este apelata cu prea multe argumente si daca 
+este asa, atunci voi afisa, eroare: ls args: too many arguments", unde "..." reprezinta argumentele. 
+Variabila len va reprezenta lungimea arg, a argumentelor. Verific daca primul argument este '/', root, 
+iar, in acest caz, aplicatia se va muta in root si apoi va afisa fisierele si directoarele de acolo. 
+Variabila arg va utiliza forma respectiva, deoarece ar putea fi incompatibila cu funcțiile utilizate. 
+Apoi verific daca comanda introdusa este "cd". Verific daca comanda apelata are prea putine operanzi, 
+adica daca nu avem niciunul si voi afisa mesajul de eroare: "cd: missing operand". Mai apoi, verific 
+daca comanda apelata are prea multi operanzi si afisez mesajul de eroare: "cd: too many arguments". 
+Verific daca calea exista, iar daca nu exista directorul respectiv, atunci afisez mesajul: 
+"Numele directorului: No such file or directory". Daca in loc sa avem un director, avem o cale, 
+atunci afisez mesajul de eroare: "Cale: Not a directory". Apoi verific daca comanda introdusa este 
+"mkdir". Verific daca comanda este apelata cu prea putini operanzi si atunci afisez mesajul de eroare: 
+"mkdir: missing operand". Variabila arg va utiliza forma respectiva, deoarece ar putea fi 
+incompatibila cu funcțiile utilizate. Verific daca comanda introdusa este "touch". Si urmez 
+aceeasi pasi ca mai sus, atat pentru aceaasta functie, cat si pentru "rmdir", "rm", "mv", "cp".
+
+
+	Daca am ajuns la final si nu am gasit niciuna din comenzile de mai sus, atunci afisez mesajul
+de eroare: "Comanda introdusa: command not found".
+	La final, sterg radacina si fii sai.
+	
+	
+
+4. Alte observatii
+
+    Nu exista leakuri de memorie
+
+5. Rezultat checker
+
+
+             = TEMA 3 - Linux File System =
+
+[test00.in] ........... passed  [7/7]
+  VALGRIND ..... OK
+[test01.in] ........... passed  [7/7]
+  VALGRIND ..... OK
+[test02.in] ........... passed  [7/7]
+  VALGRIND ..... OK
+[test03.in] ........... passed  [8/8]
+  VALGRIND ..... OK
+[test04.in] ........... passed  [8/8]
+  VALGRIND ..... OK
+[test05.in] ........... passed  [8/8]
+  VALGRIND ..... OK
+[test06.in] ........... passed  [10/10]
+  VALGRIND ..... OK
+[test07.in] ........... passed  [10/10]
+  VALGRIND ..... OK
+[test08.in] ........... passed  [10/10]
+  VALGRIND ..... OK
+[test09.in] ........... passed  [10/10]
+  VALGRIND ..... OK
+
+TOTAL ...................... [105/85]
+
+      Congrats, you rock! :D
